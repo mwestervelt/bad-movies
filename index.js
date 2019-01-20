@@ -1,263 +1,121 @@
-/* DOMContentLoaded */
+document.addEventListener("DOMContentLoaded", init)
 
-document.addEventListener("DOMContentLoaded", function(){
+function init(){
   const movieList = document.querySelector(".js-movies")
   const detail = document.querySelector(".js-detail")
   const newButton = document.querySelector(".js-add-movie")
+
   const emptyState = detail.innerHTML
-  addMoviesToList(movieList);
-  delegateShowClick(movieList, detail);
-  delegateEditClick(detail);
-  delegateDeleteClick(detail, movieList, emptyState);
-  delegateFormSubmit(detail, movieList);
-  delegateCastClicks(detail)
   newButton.addEventListener("click", function(event){ showNewMovieForm(detail) })
-})
-
-/* shared between update and delete */
-
-function getMovieLiById(movieId) {
-  return document.querySelector(`#movie-${ movieId }`)
-}
-
-/* shared between index and new */
-
-function renderMovieListItem(movie, selected) {
-  const movieListItem = document.createElement("li")
-  movieListItem.id = `movie-${ movie.id }`;
-  movieListItem.dataset.id = movie.id;
-  movieListItem.className = "movie js-movie";
-  movieListItem.innerText = movie.title;
-  if (selected === true) selectThisMovie(movieListItem)
-  return movieListItem;
-
-  //      <li id="movie-${ movie.id }" data-id="${ movie.id }" class="movie js-movie">
-  //        ${ movie.title }
-  //      </li>
+  movieList.addEventListener("click", getSingleMovieDetail)
+  getAllMovies().then(iterateMovies)
 }
 
 
-/* shared between new and show */
-
-function deselectAllMovies() {
-  const selected = document.querySelector(".selected")
-  if (selected) selected.classList.remove("selected");
+// show //
+function iterateMovies(moviesArray){
+  moviesArray.forEach(movie => showAllMovies(movie))
+}
+function showAllMovies(movie){
+    const movieList = document.querySelector(".js-movies")
+    const movieLi = document.createElement("li")
+    movieLi.setAttribute("class", "movie")
+    movieLi.setAttribute("data-id", `${movie.id}`)
+    movieLi.innerText = movie.title
+    movieList.append(movieLi)
 }
 
-function selectThisMovie(element) {
-  element.classList.add("selected")
+function getSingleMovieDetail(event){
+  let movieID = event.target.dataset.id
+  getSingleMovie(movieID).then(data => slapMovieDetail(data))
 }
 
-
-/* shared between new and edit */
-
-function writeCastMemberFormLi(name) {
-  return `<li>
-    <input type="text" class="js-movie-cast-member" name="movie-cast-member" value="${ name }"/>
-    <button class="remove-from-cast">remove</button>
-  </li>`
-}
-
-function writeForm(formTitle, movie) {
-  const castLis = (movie.cast || [ "" ]).map(writeCastMemberFormLi).join("")
-  console.log(castLis)
-  return `<h2>${ formTitle }</h2>
-    <form class="movie-form js-movie-form">
-      <input id="movie-id" name="movie-id" type="hidden" value="${ movie.id }"/>
-      <ul>
-        <li>
-          <label for="movie-title">Title</label>
-          <input id="movie-title" name="movie-title" type="text" value="${ movie.title }" />
-        </li>
-        <li>
-          <label for="movie-year">Year</label>
-          <input id="movie-year" name="movie-year" type="number" value="${ movie.year }" />
-        </li>
-        <li class="cast-inputs-container">
-          <label>Cast</label>
-          <ul class="js-cast-inputs cast-inputs">
-            ${ castLis }
-          </ul>
-          <button class="add-to-cast">add</button>
-        </li>
-      </ul>
-      <input type="submit" />
-    </form>`
-}
-
-function delegateCastClicks(detail) {
-  detail.addEventListener("click", function(event){
-    if (event.target.classList.contains("remove-from-cast")){
-      event.preventDefault()
-      event.target.parentNode.remove();
-    }
-    if (event.target.classList.contains("add-to-cast")){
-      event.preventDefault()
-      document.querySelector(".js-cast-inputs").innerHTML += writeCastMemberFormLi("")
-    }
+function slapMovieDetail(movie){
+  const detail = document.querySelector(".js-detail")
+  detail.innerHTML = `<div><h1>Title: ${movie.title}</h1>
+      <h4>Year: ${movie.year}</h4>
+      <p class="cast-detail">Cast:</p>
+      <button data-id=${movie.id} class="danger">Delete</button>
+    <div/>`
+  const castArea = document.querySelector(".cast-detail")
+  const castUl = document.createElement("ul")
+  castArea.append(castUl)
+  movie.cast.forEach(cast => {
+    const castLi = document.createElement("li")
+    castLi.innerHTML = cast
+    castUl.append(castLi)
+    const deleteBtn = document.querySelector(".danger")
+    deleteBtn.addEventListener("click", removeMovieFromDom)
   })
 }
 
-/* shared between create and update */
-function delegateFormSubmit(detail, movieList) {
-  detail.addEventListener("submit", function(event){
-    event.preventDefault();
-
-    const movie = readForm(event.target)
-    
-    if (movie.id.length)
-      updateMovie(movie, detail)
-    else
-      newMovie(movie, detail, movieList)
-  })
+/// new ///
+function showNewMovieForm(detail, movie){
+  detail.innerHTML = ""
+  detail.innerHTML = `<div><h1>New Movie Form:</h1><br>
+  <form class="add-form"method="post">Title:
+    <input type="text" class="title" name="title" value="" placeholder ="movie title here" required><br>
+      Year: <input type="text" class="year" name="year" value=" " placeholder ="movie year" required><br>
+      Cast: <input type="text" class="cast" name="cast" value=" " placeholder ="cast member" required><br>
+    <input type="submit">
+  </form> </div>`
+  const movieForm = document.querySelector(".add-form")
+  movieForm.addEventListener("submit", addNewMovie)
 }
 
-function readForm(form) {
-
-  const id = form.querySelector("#movie-id").value;
-  const title = form.querySelector("#movie-title").value
-  const year = form.querySelector("#movie-year").value
-
-  const cast = Array.from(form.querySelectorAll(".js-movie-cast-member")).map(input => input.value)
-
-  return {
-    id: id,
-    title: title, 
-    year: year,
-    cast: cast
-  }
+function addNewMovie(event){
+  event.preventDefault();
+  const newMovieTitle = event.target.title.value;
+  const newMovieYear = event.target.year.value;
+  const newMovieCast = [event.target.cast.value];
+  const newMovieObj = {"title": newMovieTitle, "year": newMovieYear, "cast": newMovieCast}
+  postNewMovie(newMovieObj).then(showAllMovies)
 }
 
-/* index */
-
-function slapMoviesOnTheDom(movies, movieList){
-  const listItems = movies.map(renderMovieListItem)
-  listItems.forEach(li => movieList.append(li))
+function removeMovieFromDom(event){
+  let movieID = event.target.dataset.id;
+  let deletedMovie = event.target.parentNode
+  let movieLi = document.querySelector(`[data-id="${movieID}"]`)
+  deletedMovie.remove()
+  movieLi.remove()
+  deleteMovie(movieID).then(getAllMovies)
 }
 
-function addMoviesToList(movieList){
-  fetch("http://localhost:3000/movies")
+/// fetch ////
+const movieURL = 'http://localhost:3000/movies'
+
+function getAllMovies() {
+    return fetch(movieURL)
+      .then(response => response.json())
+}
+
+function getSingleMovie(movieID) {
+    return fetch(movieURL + `/${movieID}`)
+      .then(response => response.json())
+}
+
+function postNewMovie(newMovieObj) {
+  const options = {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            "Content-Type": "application/json",
+
+        },
+        body: JSON.stringify(newMovieObj)
+    }
+    return fetch(movieURL, options)
     .then(response => response.json())
-    .then(movies => slapMoviesOnTheDom(movies, movieList))
 }
 
-
-/* show */
-function delegateShowClick(movieList, detail){
-  movieList.addEventListener("click", function(event){
-    if (event.target.classList.contains("js-movie")) {
-      showMovie(event.target.dataset.id, event.target, detail)
+function deleteMovie(movieID) {
+  const options = {
+        method: 'DELETE',
+        headers: {
+            'Accept': 'application/json',
+            "Content-Type": "application/json",
+        },
     }
-  })
-}
-
-function showMovie(movieId, clickedElement, detail) {
-  deselectAllMovies()
-  selectThisMovie(clickedElement)
-  detail.classList.add("loading")
-
-  fetch(`http://localhost:3000/movies/${ movieId }`)
-    .then(res => res.json())
-    .then(data => slapMovieOnTheDetail(data, detail))
-}
-
-function slapMovieOnTheDetail(movie, whereToSlapIt) {
-  whereToSlapIt.classList.remove("loading")
-  whereToSlapIt.dataset.id = movie.id
-  const castLis = movie.cast.map(actor => `<li class="cast-member">${ actor }</li>`).join("")
-  whereToSlapIt.innerHTML = `
-    <h2><span class="js-title">${ movie.title }</span> (<span class="js-year">${ movie.year }</span>)</h2>
-    <ul>
-      ${ castLis }
-    </ul>
-    <button class="js-edit">Edit</button>
-    <button data-id="${ movie.id }" class="js-delete danger">Delete</button>
-  `
-}
-
-/*edit*/
-
-function delegateEditClick(detail){
-  detail.addEventListener("click", function(event){
-    if (event.target.classList.contains("js-edit")) {
-      editMovie(detail)
-    }
-  })
-}
-
-function editMovie(detail) {
-  const title = detail.querySelector(".js-title").innerText;
-  const year = detail.querySelector(".js-year").innerText;
-
-  const cast = Array.from(detail.querySelectorAll(".cast-member")).map(li => li.innerText)
-
-  const movie = {
-    id: detail.dataset.id,
-    title: title,
-    year: year,
-    cast: cast
-  }
-  detail.innerHTML = writeForm("Edit Movie", movie)
-}
-
-
-function updateMovie(movie, detail) {
-  fetch(`http://localhost:3000/movies/${ movie.id }`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(movie)
-  }).then(res => res.json())
-    .then(movie => slapMovieOnTheDetail(movie, detail))
-
-  getMovieLiById(movie.id).innerText = movie.title;
-}
-
-
-// new
-
-function showNewMovieForm(detail){
-  const movie = {
-    title: "",
-    year: "",
-    id: "",
-  }
-  detail.innerHTML = writeForm("New Movie", movie)
-}
-
-function newMovie(movie, detail, movieList) {
-  fetch(`http://localhost:3000/movies/`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(movie)
-  }).then(res => res.json())
-    .then(movie => {
-      slapMovieOnTheDetail(movie, detail)
-      deselectAllMovies();
-      movieList.append(renderMovieListItem(movie, true))
-    })
-}
-
-/* delete */
-
-function delegateDeleteClick(detail, movieList, emptyState) {
-  detail.addEventListener("click", function(event){
-    if (event.target.classList.contains("js-delete")) {
-      deleteMovie(event.target.dataset.id, detail, emptyState)
-    }
-  })
-}
-
-function deleteMovie(movieId, detail, emptyState){
-  fetch(`http://localhost:3000/movies/${ movieId }`, {
-    method: "DELETE"
-  }).then(() => scapeItOffTheDom(movieId, detail, emptyState))
-}
-
-function scapeItOffTheDom(movieId, detail, emptyState) {
-  detail.innerHTML = emptyState;
-  getMovieLiById(movieId).remove()
+    return fetch(movieURL + `/${movieID}`, options)
+    .then(response => response.json())
 }

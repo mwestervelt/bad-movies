@@ -2,7 +2,7 @@
   "movies": [
     {
       "id": 1,
-      "title": "Spice Wor",
+      "title": "Spice World",
       "year": "1997",
       "cast": [
         "Scary Spice",
@@ -15,7 +15,7 @@
     },
     {
       "id": 2,
-      "title": "The Roo",
+      "title": "The Room",
       "year": "2003",
       "cast": [
         "Tommy Wiseau",
@@ -24,25 +24,8 @@
       ]
     },
     {
-      "id": 3,
-      "title": "Battlefield Ear",
-      "year": "2000",
-      "cast": [
-        "John Travolta"
-      ]
-    },
-    {
-      "id": 4,
-      "title": "Twilig",
-      "year": "2008",
-      "cast": [
-        "Kristen Stewart",
-        "Robert Pattinson"
-      ]
-    },
-    {
       "id": 5,
-      "title": "Garden Stat",
+      "title": "Garden State",
       "year": "2009",
       "cast": [
         "Natalie Portman",

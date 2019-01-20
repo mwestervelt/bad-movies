@@ -8,12 +8,13 @@ body {
   display: flex;
   min-height: 100%;
   margin: 0;
+  font-family: 'Roboto' , sans-serif;
 }
 .sidebar {
   width: 200px;
   margin: 0;
   padding: 0;
-  box-shadow: 0 0 10px #00000022;
+  border-right: 1px solid #ddd;
 }
 .detail {
   padding: 20px;
@@ -52,7 +53,6 @@ h1, h2 {
   right: 50px;
   width: 100px;
   height: 100px;
-  box-shadow: 0 5px 10px #00000022;
   background: white;
   border: 1px solid #ddd;
   border-radius: 50px;

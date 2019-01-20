@@ -1,10 +1,9 @@
 # Key To-Do's
-- Map out CRUD:
-  - When X happens
-  - Make Y fetch
-  - Slap Z on (off) the DOM
-- Postman
-- json-server
-- Dataset
-- Optimistic vs. pessimistic rendering
 
+* show movies in a list on the side
+* show one movie detail on the main display area
+* be able to add movies
+* be able to delete movies
+* add movie comments?
+
+* add a like btn?
